@@ -29,6 +29,17 @@ class Interfaz(Frame):
         self.create_body()
         self.create_footer()
 
+    def tiene_exactamente_un_punto(self,numero):
+            nume = str(numero)
+            primer_indice = nume.find(".")
+            if primer_indice == -1:
+                return False
+            else:
+                return True
+
+    def validate_entry(self,text):
+            return text.isdigit() or self.tiene_exactamente_un_punto(text)
+
     def create_header(self):
         headerFrame = Frame(self.master,bg='#eeeee0')
         headerFrame.place(x=0,y=0,width=1200,height=100)
@@ -49,7 +60,7 @@ class Interfaz(Frame):
         lbl_valor = Label(bodyframe,text='Valor: ',bg="#DFF3EF",fg="black",font=("Arial",22))
         lbl_valor.place(x=380,y=30)
 
-        etr_valor = ttk.Entry(bodyframe,width=30,font=font.Font(family="Arial",size=18),justify=CENTER)
+        etr_valor = ttk.Entry(bodyframe,width=30,font=font.Font(family="Arial",size=18),justify=CENTER,validate="key",validatecommand=(self.master.register(self.validate_entry), "%S"))
         etr_valor.place(x=380,y=70)
 
         self.checkbutton_value = tk.StringVar(self)
@@ -65,7 +76,10 @@ class Interfaz(Frame):
 
         btn_save = Button(bodyframe,bg="#351A52",activebackground="#4D2E6F")
         btn_save ["border"] = "0"
-        btn_save.place(x=520,y=150,width=150,height=40)
+        btn_save.place(x=520,y=130,width=150,height=40)
+
+        lbl_ttable = Label(bodyframe,text="Mensual",bg="#DFF3EF",fg="black",font=("Arial",22))
+        lbl_ttable.place(x=60,y=200)
 
         self.gridC = ttk.Treeview(bodyframe,columns=("col1"),style='Title.Treeview')
         self.gridC.column("#0",width=300)
@@ -81,6 +95,9 @@ class Interfaz(Frame):
         sb.config(command=self.gridC.yview)
         
         self.gridC['selectmode']='browse'
+
+        lbl_ttable2 = Label(bodyframe,text="Unico",bg="#DFF3EF",fg="black",font=("Arial",22))
+        lbl_ttable2.place(x=630,y=200)
 
         self.gridC2 = ttk.Treeview(bodyframe,columns=("col1"),style='Title.Treeview')
         self.gridC2.column("#0",width=300)
