@@ -2,6 +2,7 @@ from tkinter import *
 from tkinter import ttk,font
 import tkinter as tk
 from tkinter import messagebox
+from winreg import DeleteValue
 
 from backend import save_price
 from backend import get_prices
@@ -22,6 +23,11 @@ class Interfaz(Frame):
         self.master.geometry(posicion)
 
         self.master.resizable(0,0)
+
+        self.cobro= ""
+        self.text_error = tk.StringVar(self)
+        self.text_totalM = tk.StringVar(self)
+        self.text_totalU = tk.StringVar(self)
 
         self.s = ttk.Style()
         self.s.configure('Cobros.TCheckbutton', font=("Arial",22), background="#DFF3EF")
@@ -51,15 +57,24 @@ class Interfaz(Frame):
         prices = get_prices()
         self.limpiarGrid(grid,grid2)
         datos = prices
+        totalM = 0
+        totalU = 0
         for row in datos:
             if row['cobro'] == 'Mensual':
                 grid.insert("",END,text=row['especificacion'],values=(row['valor']))
+                totalM = totalM+int(row['valor'])
             else:
                 grid2.insert("",END,text=row['especificacion'],values=(row['valor']))
+                totalU = totalU+int(row['valor'])
         if len(grid.get_children()) > 0:
             grid.selection_set( grid.get_children()[0] )
         if len(grid2.get_children()) > 0:
             grid2.selection_set( grid2.get_children()[0] )
+
+        self.text_totalM.set("Total:{}".format(totalM))
+        self.text_totalU.set("Total:{}".format(totalU))
+        self.lbl_totalM.config(textvariable=self.text_totalM)
+        self.lbl_totalU.config(textvariable=self.text_totalU)
 
     def limpiarGrid(self,grid,grid2):
         for item in grid.get_children():
@@ -67,9 +82,30 @@ class Interfaz(Frame):
         for item in grid2.get_children():
             grid2.delete(item)
 
+    def limpiarCajas(self):
+        self.etr_espec.delete(0,END)
+        self.etr_valor.delete(0,END)
+        self.cobro = ""
+
+    def camposllenos(self):
+        if len(self.etr_espec.get()) == 0:
+            self.text_error.set("Campo especificacion vacio")
+            self.lbl_error.config(textvariable=self.text_error)
+            return True
+        if len(self.etr_valor.get()) == 0:
+            self.text_error.set("Campo valor vacio")
+            return True
+        if len(self.cobro) == 0:
+            self.text_error.set("Seleccione un cobro")
+            return True
+
     def _button_save(self,espec,val,cobro):
+        if self.camposllenos():
+            return True
         save_price(espec,val,cobro)
         self.llenaDatosProd(self.gridC,self.gridC2)
+        self.limpiarCajas()
+        self.text_error.set("")
 
     def create_header(self):
         headerFrame = Frame(self.master,bg='#eeeee0')
@@ -85,14 +121,18 @@ class Interfaz(Frame):
         lbl_espec = Label(bodyframe,text='Especificacion: ',bg="#DFF3EF",fg="black",font=("Arial",22))
         lbl_espec.place(x=50,y=30)
 
-        etr_espec = ttk.Entry(bodyframe,width=20,font=font.Font(family="Arial",size=18),justify=CENTER)
-        etr_espec.place(x=50,y=70)
+        self.lbl_error = Label(bodyframe,bg="#DFF3EF",fg="black",font=("Arial",22))
+        self.lbl_error.place(x=50,y=130)
+        self.lbl_error.config(textvariable=self.text_error)
+
+        self.etr_espec = ttk.Entry(bodyframe,width=20,font=font.Font(family="Arial",size=18),justify=CENTER)
+        self.etr_espec.place(x=50,y=70)
 
         lbl_valor = Label(bodyframe,text='Valor: ',bg="#DFF3EF",fg="black",font=("Arial",22))
         lbl_valor.place(x=380,y=30)
 
-        etr_valor = ttk.Entry(bodyframe,width=30,font=font.Font(family="Arial",size=18),justify=CENTER,validate="key",validatecommand=(self.master.register(self.validate_entry), "%S"))
-        etr_valor.place(x=380,y=70)
+        self.etr_valor = ttk.Entry(bodyframe,width=30,font=font.Font(family="Arial",size=18),justify=CENTER,validate="key",validatecommand=(self.master.register(self.validate_entry), "%S"))
+        self.etr_valor.place(x=380,y=70)
 
         self.checkbutton_value = tk.StringVar(self)
 
@@ -105,7 +145,7 @@ class Interfaz(Frame):
         self.cb_unico = ttk.Checkbutton(bodyframe, text="Unico",style='Cobros.TCheckbutton', variable=self.checkbutton_value, onvalue="Unico", offvalue=0,command=self.checkbox_clicked)
         self.cb_unico.place(x=1000, y=67)
 
-        btn_save = Button(bodyframe,bg="#351A52",activebackground="#4D2E6F",command=lambda: self._button_save(etr_espec.get(),etr_valor.get(),self.cobro))
+        btn_save = Button(bodyframe,bg="#351A52",activebackground="#4D2E6F",command=lambda: self._button_save(self.etr_espec.get(),self.etr_valor.get(),self.cobro))
         btn_save ["border"] = "0"
         btn_save.place(x=520,y=130,width=150,height=40)
 
@@ -138,8 +178,6 @@ class Interfaz(Frame):
         
         self.gridC2.place(x=630,y=250,height=250)
 
-        self.llenaDatosProd(self.gridC,self.gridC2)
-
         sb2 = Scrollbar(bodyframe, orient=VERTICAL)
         sb2.place(x=1134,y=250,height=250)
         self.gridC2.config(yscrollcommand=sb2.set)
@@ -147,11 +185,13 @@ class Interfaz(Frame):
         
         self.gridC2['selectmode']='browse'
 
-        lbl_totalM = Label(bodyframe,text='Total: ',bg="#DFF3EF",fg="black",font=("Arial",22))
-        lbl_totalM.place(x=280, y=500)
+        self.lbl_totalM = Label(bodyframe,bg="#DFF3EF",fg="black",font=("Arial",22))
+        self.lbl_totalM.place(x=280, y=500)
+        self.lbl_totalM.config(textvariable=self.text_totalM)
 
-        lbl_totalU = Label(bodyframe,text='Total: ',bg="#DFF3EF",fg="black",font=("Arial",22))
-        lbl_totalU.place(x=850, y=500)
+        self.lbl_totalU = Label(bodyframe,bg="#DFF3EF",fg="black",font=("Arial",22))
+        self.lbl_totalU.place(x=850, y=500)
+        self.lbl_totalU.config(textvariable=self.text_totalU)
 
         btn_eliminarM = Button(bodyframe, bg="#351A52",activebackground="#4D2E6F")
         btn_eliminarM ["border"] = "0"
@@ -160,6 +200,8 @@ class Interfaz(Frame):
         btn_eliminarU = Button(bodyframe, bg="#351A52",activebackground="#4D2E6F")
         btn_eliminarU ["border"] = "0"
         btn_eliminarU.place(x=850,y=550,width=150,height=40)
+
+        self.llenaDatosProd(self.gridC,self.gridC2)
 
     def create_footer(self):
         footerFrame = Frame(self.master,bg='#eeeee0')
