@@ -3,6 +3,10 @@ from tkinter import ttk,font
 import tkinter as tk
 from tkinter import messagebox
 
+from backend import save_price
+from backend import get_prices
+
+prices = get_prices()
 
 class Interfaz(Frame):
     def __init__(self,master):
@@ -40,6 +44,33 @@ class Interfaz(Frame):
     def validate_entry(self,text):
             return text.isdigit() or self.tiene_exactamente_un_punto(text)
 
+    def checkbox_clicked(self):
+        self.cobro = self.checkbutton_value.get()
+
+    def llenaDatosProd(self,grid,grid2):
+        prices = get_prices()
+        self.limpiarGrid(grid,grid2)
+        datos = prices
+        for row in datos:
+            if row['cobro'] == 'Mensual':
+                grid.insert("",END,text=row['especificacion'],values=(row['valor']))
+            else:
+                grid2.insert("",END,text=row['especificacion'],values=(row['valor']))
+        if len(grid.get_children()) > 0:
+            grid.selection_set( grid.get_children()[0] )
+        if len(grid2.get_children()) > 0:
+            grid2.selection_set( grid2.get_children()[0] )
+
+    def limpiarGrid(self,grid,grid2):
+        for item in grid.get_children():
+            grid.delete(item)
+        for item in grid2.get_children():
+            grid2.delete(item)
+
+    def _button_save(self,espec,val,cobro):
+        save_price(espec,val,cobro)
+        self.llenaDatosProd(self.gridC,self.gridC2)
+
     def create_header(self):
         headerFrame = Frame(self.master,bg='#eeeee0')
         headerFrame.place(x=0,y=0,width=1200,height=100)
@@ -68,13 +99,13 @@ class Interfaz(Frame):
         lbl_check = Label(bodyframe,text="Cobro:",bg="#DFF3EF",fg="black",font=("Arial",22))
         lbl_check.place(x=910,y=30)
 
-        self.cb_mensual = ttk.Checkbutton(bodyframe, text="Mensual",style='Cobros.TCheckbutton', variable=self.checkbutton_value, onvalue="Mensual", offvalue=0)
+        self.cb_mensual = ttk.Checkbutton(bodyframe, text="Mensual",style='Cobros.TCheckbutton', variable=self.checkbutton_value, onvalue="Mensual", offvalue=1,command=self.checkbox_clicked)
         self.cb_mensual.place(x=820, y=67)
 
-        self.cb_unico = ttk.Checkbutton(bodyframe, text="Unico",style='Cobros.TCheckbutton', variable=self.checkbutton_value, onvalue="Unico", offvalue=0)
+        self.cb_unico = ttk.Checkbutton(bodyframe, text="Unico",style='Cobros.TCheckbutton', variable=self.checkbutton_value, onvalue="Unico", offvalue=0,command=self.checkbox_clicked)
         self.cb_unico.place(x=1000, y=67)
 
-        btn_save = Button(bodyframe,bg="#351A52",activebackground="#4D2E6F")
+        btn_save = Button(bodyframe,bg="#351A52",activebackground="#4D2E6F",command=lambda: self._button_save(etr_espec.get(),etr_valor.get(),self.cobro))
         btn_save ["border"] = "0"
         btn_save.place(x=520,y=130,width=150,height=40)
 
@@ -107,6 +138,8 @@ class Interfaz(Frame):
         
         self.gridC2.place(x=630,y=250,height=250)
 
+        self.llenaDatosProd(self.gridC,self.gridC2)
+
         sb2 = Scrollbar(bodyframe, orient=VERTICAL)
         sb2.place(x=1134,y=250,height=250)
         self.gridC2.config(yscrollcommand=sb2.set)
@@ -134,3 +167,4 @@ class Interfaz(Frame):
 
         lblfooter = Label(footerFrame,text='Hecho por: Samuel Triana',bg="#eeeee0",fg="black",font=("Arial",10))
         lblfooter.place(x=475, y=0)
+
