@@ -1,7 +1,7 @@
 import csv
 import os
 
-PRICES_TABLE = "prices.csv"
+PRICES_TABLE = ".prices.csv"
 PRICES_SCHEME = ['especificacion','valor','cobro']
 prices = []
 
@@ -13,15 +13,13 @@ def _initialize_prices_from_storage():
             prices.append(row)
 
 def _save_prices_to_storage():
-    global prices
     tmp_table_name = '{}.tmp'.format(PRICES_TABLE)
     with open(tmp_table_name, mode='w') as f:
         writer = csv.DictWriter(f, fieldnames=PRICES_SCHEME)
         writer.writerows(prices)
-        
 
         os.remove(PRICES_TABLE)
-        os.rename(tmp_table_name, PRICES_TABLE)
+    os.rename(tmp_table_name, PRICES_TABLE)
 
 def save_price(especificacion,valor,cobro):
     price = {
@@ -36,9 +34,8 @@ def delete_price(especificacion):
     for element in prices:
         if element['especificacion'].lower() == especificacion.lower():
             prices.remove(element)
-            return 
-        else:
-            print("No encuentra")
+            return True
+    return False
     
 
 

@@ -2,10 +2,11 @@ from tkinter import *
 from tkinter import ttk,font
 import tkinter as tk
 from tkinter import messagebox
-from winreg import DeleteValue
 
 from backend import save_price
 from backend import get_prices
+from backend import delete_price
+
 
 prices = get_prices()
 
@@ -107,6 +108,28 @@ class Interfaz(Frame):
         self.limpiarCajas()
         self.text_error.set("")
 
+    def borrar_mensual(self):
+        selected = self.gridC.focus()
+        clave = self.gridC.item(selected,'text')
+        r = messagebox.askquestion("Eliminar","Deseas eliminar el cobro con nombre: {}".format(clave))
+        if r == messagebox.YES:
+            if delete_price(clave):
+                messagebox.showinfo("Eliminar","Cobro Eliminado correctamente")
+                self.llenaDatosProd(self.gridC,self.gridC2)
+            else:
+                messagebox.showinfo("Eliminar","El cobro no ha podido ser eleminado")
+
+    def borrar_unico(self):
+        selected = self.gridC2.focus()
+        clave = self.gridC2.item(selected,'text')
+        r = messagebox.askquestion("Eliminar","Deseas eliminar el cobro con nombre: {}".format(clave))
+        if r == messagebox.YES:
+            if delete_price(clave):
+                messagebox.showinfo("Eliminar","Cobro Eliminado correctamente")
+                self.llenaDatosProd(self.gridC,self.gridC2)
+            else:
+                messagebox.showinfo("Eliminar","El cobro no ha podido ser eleminado")
+
     def create_header(self):
         headerFrame = Frame(self.master,bg='#eeeee0')
         headerFrame.place(x=0,y=0,width=1200,height=100)
@@ -193,11 +216,11 @@ class Interfaz(Frame):
         self.lbl_totalU.place(x=850, y=500)
         self.lbl_totalU.config(textvariable=self.text_totalU)
 
-        btn_eliminarM = Button(bodyframe, bg="#351A52",activebackground="#4D2E6F")
+        btn_eliminarM = Button(bodyframe, bg="#351A52",activebackground="#4D2E6F",command=lambda:self.borrar_mensual())
         btn_eliminarM ["border"] = "0"
         btn_eliminarM.place(x=280,y=550,width=150,height=40)
 
-        btn_eliminarU = Button(bodyframe, bg="#351A52",activebackground="#4D2E6F")
+        btn_eliminarU = Button(bodyframe, bg="#351A52",activebackground="#4D2E6F",command=lambda:self.borrar_unico())
         btn_eliminarU ["border"] = "0"
         btn_eliminarU.place(x=850,y=550,width=150,height=40)
 

@@ -15,4 +15,4 @@ def run():
 if __name__ == '__main__':
     run()
 
-_save_prices_to_storage
+_save_prices_to_storage()
